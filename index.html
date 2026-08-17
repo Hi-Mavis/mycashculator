@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>MyCashculator</title>
+<style>
+:root{--bg:#fff;--panel:#f8f8fb;--ink:#10121a;--muted:#6b7287;--faint:#9aa0b4;--line:#e9eaf0;--accent:#4f46e5;--green:#0f8a5f;--green-bg:#e8f6f0;--amber:#9a6700;--amber-bg:#fef3c7;--red:#b42318;--red-bg:#fef1f1;--radius:18px;--shadow:0 1px 2px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.04)}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Inter",system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.45}
+button,input,select{font:inherit}button{cursor:pointer}
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+header.topbar{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;padding:12px 0}
+.brand{display:flex;align-items:center;gap:10px}.mark{width:32px;height:32px;border-radius:9px;background:var(--ink);display:grid;place-items:center;color:#fff}
+.btn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;display:inline-flex;gap:8px;align-items:center}
+.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}.btn.small{padding:6px 10px;font-size:12px}
+main{padding:16px 0 96px}.view{display:none}.view.active{display:block}
+.section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin:6px 0 14px;flex-wrap:wrap}
+.section-head h2{margin:0;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.sub{color:var(--muted);font-size:13px;margin-top:4px}
+.kicker{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);font-weight:700;margin:22px 0 8px}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(min-width:820px){.metrics{grid-template-columns:repeat(4,1fr)}}
+.metric{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:var(--shadow)}
+.metric .label{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted)}.metric .value{margin-top:8px;font-size:22px;font-weight:800;letter-spacing:-.04em}.metric .hint{margin-top:6px;font-size:11.5px;color:var(--faint)}
+.metric.accent{background:var(--ink);color:#fff}.metric.accent .label{color:rgba(255,255,255,.7)}.metric.accent .hint{color:rgba(255,255,255,.6)}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}.list{padding:6px}
+.row{display:flex;justify-content:space-between;gap:12px;padding:12px 10px;border-radius:12px}.row+.row{border-top:1px dashed var(--line)}.row:hover{background:var(--panel)}
+.title{font-weight:650;font-size:13.5px}.meta{font-size:12px;color:var(--muted);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap}
+.badge{font-size:11px;font-weight:650;padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:#fff}.badge.green{background:var(--green-bg);color:var(--green);border-color:#c6e9db}.badge.amber{background:var(--amber-bg);color:var(--amber);border-color:#f5d78a}.badge.red{background:var(--red-bg);color:var(--red);border-color:#f3c5c2}.badge.gray{background:#f4f5f8;color:#60677a}
+.field label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted);margin:0 0 6px 2px}
+.input,.select{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px}.input:focus,.select:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px #eef0ff}
+.form-grid{display:grid;gap:10px}.form-grid.cols2{grid-template-columns:1fr 1fr}@media(max-width:600px){.form-grid.cols2{grid-template-columns:1fr}}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:40;background:#fff;border-top:1px solid var(--line);border-radius:22px 22px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.12);transform:translateY(110%);transition:transform .28s;max-height:92dvh;overflow:auto}.sheet.open{transform:translateY(0)}
+.sheet-head{position:sticky;top:0;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;z-index:1}
+.sheet-body{padding:14px 16px 18px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.28);backdrop-filter:blur(2px);z-index:35;opacity:0;pointer-events:none;transition:.22s}.overlay.show{opacity:1;pointer-events:auto}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:blur(18px);border-top:1px solid var(--line);padding-bottom:max(6px,env(safe-area-inset-bottom))}
+.tabbar-inner{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:6px 8px}
+.tabbtn{border:0;background:transparent;border-radius:14px;padding:8px 6px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10.5px;font-weight:650;color:var(--muted)}
+.tabbtn.active{color:var(--ink)}.tabbtn.active .ico{background:var(--ink);color:#fff}.tabbtn .ico{width:22px;height:22px;display:grid;place-items:center;border-radius:10px}
+@media(min-width:821px){.tabbar{position:sticky;top:54px;bottom:auto;border-top:none;border-bottom:1px solid var(--line)}.tabbar-inner{max-width:1120px;padding:8px 0}main{padding-bottom:28px}}
+.insight-card{border:1px solid #e3d9b8;background:linear-gradient(180deg,#fffaf0,#fff5d9);border-radius:16px;padding:12px 14px;font-size:13px}
+.insight-card.urgent{border-color:#f0b4ad;background:linear-gradient(180deg,#fff6f5,#ffebe9)}
+.insight-card > strong{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:6px}
+.card .split > strong,.card > div > strong{font-size:11px!important;font-weight:700!important;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)!important}
+.inline-note{font-size:12px;color:var(--muted);line-height:1.5}.split{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.right{margin-left:auto}.sep{height:1px;background:var(--line);margin:12px 0}
+.cal{border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:var(--shadow);overflow:hidden}.cal-head{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--panel);border-bottom:1px solid var(--line)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}.cal-dow{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--faint);padding:8px 0;text-align:center;border-bottom:1px solid var(--line)}
+.cal-day{aspect-ratio:1/1;min-height:46px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:6px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;background:#fff;touch-action:none;user-select:none}.cal-day:nth-child(7n){border-right:none}.cal-day.muted{background:#fbfbfd;color:var(--faint)}.cal-day.today{outline:2px solid var(--ink);outline-offset:-2px}.cal-day.has-entry:after{content:"";width:5px;height:5px;border-radius:50%;background:#4f46e5;position:absolute;top:6px;right:6px}.cal-day.selected{background:var(--ink);color:#fff;position:relative}
+.cal-day.in-range{background:#eef0ff;color:var(--ink)}.cal-day.range-start{background:var(--ink);color:#fff}.cal-day.range-end{background:var(--ink);color:#fff}
+.cal-num{font-size:13px;font-weight:700}.meta-mini{font-size:10.5px;color:var(--muted);font-weight:600}
+#sheet-time{max-height:min(88dvh,620px);overflow:hidden}
+#sheet-time .sheet-body{padding:12px 14px 14px;display:grid;gap:8px;overflow:visible}
+#sheet-time .form-grid{ gap:8px }
+#sheet-time .field label{margin:0 0 4px 2px;font-size:10.5px}
+#sheet-time .input,#sheet-time .select{padding:9px 11px;font-size:13.5px;border-radius:11px}
+#sheet-time .sheet-head{padding:10px 14px}
+.dlog-wrap{position:fixed;inset:0;z-index:80;display:none;place-items:center;padding:16px;background:transparent;pointer-events:none}.dlog-wrap.show{display:grid;pointer-events:auto}.dlog-wrap .dlog-backdrop{position:absolute;inset:0;background:rgba(16,18,26,.42);border:0;pointer-events:auto;backdrop-filter:none;-webkit-backdrop-filter:none}.dlog-box{position:relative;z-index:1;width:min(380px,calc(100vw - 24px));background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.18);padding:16px;pointer-events:auto}
+#askOverlay{background:rgba(16,18,26,.42) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;opacity:1 !important}
+#askWrap .dlog-box{animation:popIn .16s ease}
+@keyframes popIn{from{transform:translateY(4px) scale(.98);opacity:.6}to{transform:none;opacity:1}}
+#askCancel,#askOk{pointer-events:auto;position:relative;z-index:2}
+@media(max-width:600px){.recurring-sentence{flex-wrap:wrap !important}}
+</style>
+</head>
+<body>
+<div data-generated-space-root="" data-generated-space-slug="budget-and-timesheet-tracker" style="display:none"></div>
+<header class="topbar"><div class="wrap topbar-inner"><div class="brand"><div class="mark">◐</div><div><div style="font-weight:750;font-size:14px">MyCashculator</div><div style="font-size:11px;color:#6b7287">local • offline</div></div></div><div><button id="exportBtn" class="btn small" type="button">Export</button></div></div></header>
+<main class="wrap">
+<section id="view-dashboard" class="view active">
+<div class="section-head"><div><h2>Dashboard</h2><div class="sub"><span id="dashMonth">This month</span> • MTD overview</div></div><div class="split"><button id="prevMonth" class="btn small" type="button">‹</button><button id="nextMonth" class="btn small" type="button">›</button></div></div>
+<div id="insightsMount" style="display:grid;gap:10px;margin-bottom:12px"></div>
+<div class="metrics" id="metrics"></div>
+<div style="display:grid;gap:10px;margin-top:12px">
+<div class="card" style="padding:12px"><div class="split"><strong style="font-size:13px">Recent time</strong><span class="right inline-note">tap to edit</span></div><div id="recentTime" class="list" style="margin-top:8px"></div></div>
+<div class="card" style="padding:12px"><div class="split"><strong style="font-size:13px">Saving targets</strong><span class="inline-note">from Settings</span></div><div id="targetsDashList" class="list" style="margin-top:8px"></div></div>
+</div>
+</section>
+<section id="view-timesheet" class="view">
+<div class="section-head"><div><h2>Time</h2><div class="sub">Tap a date to log • drag to select dates to settle</div></div><div class="split"><button class="btn small" id="openSettleBtn" type="button">Settlement</button></div></div>
+<div class="cal" id="calendarMount" style="margin-bottom:12px"></div>
+<div id="settleInline" style="display:none;margin:0 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:#f8f8fb;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap"></div>
+<div id="timeList" class="card" style="margin-bottom:12px"></div>
+</section>
+<section id="view-settings" class="view">
+<div class="section-head"><div><h2>Settings</h2><div class="sub">Employers • Recurring • Saving targets • local only</div></div></div>
+<div class="card" style="padding:14px" id="employerManager">
+<div class="split" style="justify-content:space-between;margin-bottom:10px"><strong style="font-size:13px">Employers</strong><button class="btn small primary" id="addEmployerBtn" type="button">+ Add</button></div>
+<div id="employerList" style="display:grid;gap:8px"></div>
+<div id="employerFormWrap" style="display:none;margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+<input type="hidden" id="emp_id"/><div class="form-grid cols2"><div class="field"><label>Name</label><input id="emp_name" class="input" placeholder="Acme Studio"/></div><div class="field"><label>Hourly rate</label><input id="emp_rate" class="input" type="number" step="0.01" min="0" placeholder="65"/></div></div>
+<div class="form-grid cols2" style="margin-top:10px"><div class="field"><label>Currency</label><div style="display:flex;gap:6px"><select id="emp_curr_select" class="select" style="flex:1"><option value="EUR">EUR</option><option value="USD">USD</option><option value="GBP">GBP</option><option value="custom">Custom…</option></select><input id="emp_curr_custom" class="input" placeholder="JPY" style="flex:1;display:none;max-width:110px"/></div></div><div class="field" style="display:flex;align-items:flex-end"><label style="display:flex;gap:8px;align-items:center;font-size:13px"><input id="emp_default" type="checkbox"/> Default</label></div></div>
+<div class="split" style="margin-top:12px"><button class="btn primary small" id="emp_save" type="button">Save</button><button class="btn small" id="emp_cancel" type="button">Cancel</button><button class="btn small" id="emp_delete" type="button" style="display:none;margin-left:auto">Delete</button></div>
+</div>
+</div>
+<div class="card" style="padding:14px;margin-top:14px"><div class="split" style="justify-content:space-between;margin-bottom:10px"><strong style="font-size:13px">Recurring costs</strong><button class="btn small primary" id="addSettingsRecurringBtn" type="button">+ Add</button></div><div id="settingsRecurringList" style="display:grid;gap:8px"></div>
+<div id="settingsRecurringFormWrap" style="display:none;margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+<input type="hidden" id="sr_id"/><div class="form-grid cols2"><div class="field"><label>Name</label><input id="sr_name" class="input" placeholder="Rent"/></div><div class="field"><label>Amount</label><input id="sr_amount" class="input" type="number" step="0.01" min="0" placeholder="900"/></div></div>
+<div class="field" style="margin-top:10px"><label>Schedule</label><div class="recurring-sentence" style="display:flex;gap:8px;align-items:center;flex-wrap:nowrap;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 12px;font-size:14px"><span style="font-weight:700">Every</span><select id="sr_ordinal" class="select" style="width:auto;min-width:108px;padding:8px 10px;border-radius:10px"></select><select id="sr_unit" class="select" style="width:auto;min-width:148px;padding:8px 10px;border-radius:10px"><option value="day">Day</option><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select><span style="color:var(--muted);font-weight:600">of each month</span></div></div>
+<div class="split" style="margin-top:12px"><button class="btn primary small" id="sr_save" type="button">Save</button><button class="btn small" id="sr_cancel" type="button">Cancel</button><button class="btn small" id="sr_delete" type="button" style="display:none;margin-left:auto">Delete</button></div>
+</div></div>
+<div class="card" style="padding:14px;margin-top:14px"><div class="split" style="justify-content:space-between;margin-bottom:10px"><strong style="font-size:13px">Saving targets</strong><button class="btn small primary" id="addSettingsSavingBtn" type="button">+ Add</button></div><div id="settingsSavingList" style="display:grid;gap:8px"></div>
+<div id="settingsSavingFormWrap" style="display:none;margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+<input type="hidden" id="st_id"/><div class="form-grid cols2"><div class="field"><label>Purpose</label><input id="st_purpose" class="input" placeholder="Tax" /></div><div class="field"><label>Saving rule</label><div class="recurring-sentence" style="display:flex;gap:8px;align-items:center;flex-wrap:nowrap;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 12px;font-size:14px"><span style="font-weight:700">Save</span><input id="st_value" class="input" type="number" step="0.1" min="0" placeholder="25" style="width:96px;padding:8px 10px;border-radius:10px"/><select id="st_mode" class="select" style="width:auto;min-width:120px;padding:8px 10px;border-radius:10px"><option value="percent">% of</option><option value="amount">amount of</option></select><span style="color:var(--muted);font-weight:600">each income</span></div></div></div>
+<div class="split" style="margin-top:12px"><button class="btn primary small" id="st_save" type="button">Save</button><button class="btn small" id="st_cancel" type="button">Cancel</button><button class="btn small" id="st_delete" type="button" style="display:none;margin-left:auto">Delete</button></div>
+</div></div>
+<div class="kicker">Storage</div><div class="card" style="padding:14px"><div class="inline-note">localStorage key <code>btt_v1</code> • offline on GitHub Pages.</div><div style="margin-top:10px"><button id="wipeBtn" class="btn small" type="button">Clear sample data</button></div></div>
+</section>
+</main>
+<nav class="tabbar"><div class="tabbar-inner"><button class="tabbtn active" data-tab="dashboard" type="button"><span class="ico">◈</span>Dash</button><button class="tabbtn" data-tab="timesheet" type="button"><span class="ico">◑</span>Time</button><button class="tabbtn" data-tab="settings" type="button"><span class="ico">⚙</span>Settings</button></div></nav>
+<div id="overlay" class="overlay"></div>
+<div id="sheet-time" class="sheet"><div class="sheet-head"><strong><span id="timeFormTitle">New</span> time entry</strong><button class="btn small" data-close type="button">Close</button></div><form id="timeForm" class="sheet-body"><input type="hidden" id="t_id"/><div class="field"><label>Date</label><input id="t_date" class="input" type="date" required/></div><div class="form-grid cols2" style="grid-template-columns:1fr 1fr"><div class="field"><label>Start</label><input id="t_start" class="input" type="time"/></div><div class="field"><label>End</label><input id="t_end" class="input" type="time"/></div></div><div class="form-grid cols2" style="grid-template-columns:1fr 1fr"><div class="field"><label>Hours</label><input id="t_hours" class="input" type="number" step="0.25" min="0" max="24" required/></div><div class="field"><label>Rate</label><input id="t_rate" class="input" type="number" step="0.01" min="0" required/></div></div><div class="form-grid cols2" style="grid-template-columns:1.2fr .8fr"><div class="field"><label>Employer</label><select id="t_employer" class="select"><option value="">— no employer —</option></select></div><div class="field"><label>Currency</label><select id="t_curr" class="select"><option value="EUR">EUR</option><option value="USD">USD</option><option value="GBP">GBP</option></select></div></div><div class="split" style="margin-top:6px"><button type="submit" class="btn primary">Save</button><button type="button" id="t_delete" class="btn small" style="display:none">Delete</button><span class="inline-note" id="t_hint"></span></div></form></div>
+<div id="sheet-budget" class="sheet"><div class="sheet-head"><strong><span id="bFormTitle">New</span> budget entry</strong><button class="btn small" data-close type="button">Close</button></div><form id="budgetForm" class="sheet-body form-grid"><input type="hidden" id="b_id"/><div class="form-grid cols2"><div class="field"><label>Date</label><input id="b_date" class="input" type="date" required/></div><div class="field"><label>Type</label><select id="b_type" class="select" required><option value="income">Income</option><option value="expense">Expense</option></select></div></div><div class="form-grid cols2"><div class="field"><label>Category</label><select id="b_cat" class="select" required></select></div><div class="field"><label>Amount</label><input id="b_amount" class="input" type="number" step="0.01" min="0" required/></div></div><div class="form-grid cols2"><div class="field"><label>Currency</label><select id="b_curr" class="select"><option value="EUR">EUR</option><option value="USD">USD</option><option value="GBP">GBP</option></select></div><div class="field"><label>Link</label><select id="b_link" class="select"><option value="">— not linked —</option></select></div></div><div class="field"><label>Note</label><input id="b_note" class="input" placeholder="Invoice, Adobe…"/></div><div class="split" style="margin-top:8px"><button type="submit" class="btn primary">Save</button><button type="button" id="b_delete" class="btn small" style="display:none">Delete</button></div></form></div>
+<div id="sheet-settle" class="sheet"><div class="sheet-head"><strong>Settlement</strong><button class="btn small" data-close type="button">Close</button></div><div class="sheet-body form-grid">
+<div class="form-grid cols2"><div class="field"><label>Frequency</label><select id="settleMode" class="select"><option value="monthly">Monthly</option><option value="biweekly">Biweekly</option><option value="custom">Custom</option></select></div><div class="field"><label>To</label><input id="settleTo" class="input" type="date"/></div></div>
+<div class="field"><label>From (auto = day after last settlement)</label><input id="settleFrom" class="input" type="date" readonly/></div>
+<div class="inline-note" id="settlePreview" style="margin:8px 0"></div>
+<div class="split"><button id="doSettle" class="btn primary small" type="button">Settle → Budget</button><span class="inline-note">creates income entry</span></div>
+<div class="sep"></div><div class="inline-note" style="margin-bottom:6px">History (tap to undo)</div><div id="settleHistory" class="list"></div>
+</div></div>
+<div id="sheet-export" class="sheet"><div class="sheet-head"><strong>Export</strong><button class="btn small" data-close type="button">Close</button></div><div class="sheet-body form-grid"><button class="btn" id="expTime" type="button">Export Timesheet CSV</button><button class="btn" id="expBudget" type="button">Export Budget CSV</button><button class="btn" id="expAll" type="button">Export All backup</button></div></div>
+<div id="askWrap" class="dlog-wrap"><button class="dlog-backdrop" id="askOverlay" type="button" aria-label="Close dialog"></button><div class="dlog-box"><div id="askText" style="font-weight:600">Are you sure?</div><div class="inline-note" id="askHint" style="margin-top:6px"></div><div class="split" style="margin-top:14px;justify-content:flex-end"><button id="askCancel" class="btn small" type="button">Cancel</button><button id="askOk" class="btn primary small" type="button">Delete</button></div></div></div>
+<script>
+(function(){
+const KEY='btt_v1';
+const $=s=>document.querySelector(s); const $$=s=>Array.from(document.querySelectorAll(s));
+const defaults={displayCurrency:'EUR',employers:[],defaultEmployerId:null,timeEntries:[],budgetEntries:[],monthCursor:new Date().toISOString().slice(0,7),settlements:[],settlementMode:'monthly',recurringCosts:[],savingTargets:[],calendarSelected:null};
+function load(){try{const raw=localStorage.getItem(KEY);if(!raw) return structuredClone(defaults);const j=JSON.parse(raw);return {...structuredClone(defaults),...j, employers:j.employers||[],timeEntries:j.timeEntries||[],budgetEntries:j.budgetEntries||[],settlements:j.settlements||[],recurringCosts:j.recurringCosts||[],savingTargets:j.savingTargets||[],settlementMode:j.settlementMode||'monthly'} }catch(e){return structuredClone(defaults)}}
+function save(s){localStorage.setItem(KEY,JSON.stringify(s))}
+let state=load();
+// migrate old shapes
+try{
+  state.recurringCosts=(state.recurringCosts||[]).map(rc=>{
+    if(!rc) return rc;
+    if(!rc.scheduleType){
+      if(rc.week!=null || rc.weekday!=null){ rc.scheduleType='dow'; rc.week=rc.week??1; rc.weekday=rc.weekday??3; }
+      else { rc.scheduleType='dom'; rc.day=rc.day||1 }
+    }
+    if(rc.scheduleType==='dom'){ rc.day=rc.day||1 }
+    if(rc.scheduleType==='dow'){ rc.week=rc.week??1; rc.weekday=rc.weekday??3 }
+    return rc
+  });
+  state.savingTargets=(state.savingTargets||[]).map(t=>{
+    if(!t) return t;
+    if(t.purpose || t.mode){ // already new
+      t.purpose=t.purpose||'Tax'; t.mode=t.mode||'percent'; t.value=t.value!=null?t.value:15;
+      return t
+    }
+    // old -> new
+    let purpose=t.category||'Tax';
+    let customPurpose=t.customCategory||'';
+    if(purpose==='Custom' && customPurpose) { /* keep */ } else if(t.name && !t.category){ purpose=t.name; }
+    // map amount
+    const mode='percent';
+    const value=15;
+    // if old targetAmount was large, try preserve as amount? keep percent 20 as better default
+    if(t.targetAmount!=null && t.targetAmount>0){
+      // if user had a large target, treat as percent fallback? use amount mode for large numbers >100
+      if(t.targetAmount>100){ return {id:t.id, purpose:purpose, customPurpose:customPurpose, mode:'amount', value:t.targetAmount } }
+    }
+    return {id:t.id, purpose:purpose, customPurpose:customPurpose, mode:mode, value:value}
+  });
+}catch(e){}
+if(!state.employers?.length && !(state.timeEntries?.length)){
+  state.employers=[{id:uid(),name:'Acme Studio',hourlyRate:65,currency:'EUR'}];
+  state.defaultEmployerId=state.employers[0].id;
+  state.displayCurrency='EUR';
+  state.timeEntries=[
+    {id:uid(),date:todayISO(-2),employerId:state.employers[0].id,employerName:'Acme Studio',project:'Brand site',hours:6,rate:65,currency:'EUR',start:'09:00',end:'15:00'},
+    {id:uid(),date:todayISO(-1),employerId:state.employers[0].id,employerName:'Acme Studio',project:'Revisions',hours:2.5,rate:65,currency:'EUR'},
+    {id:uid(),date:todayISO(0),employerId:state.employers[0].id,employerName:'Acme Studio',project:'Menu edit',hours:1.5,rate:40,currency:'EUR'}
+  ];
+  state.budgetEntries=[
+    {id:uid(),date:todayISO(0),type:'expense',category:'Software',amount:19,currency:'EUR',note:'Figma'},
+    {id:uid(),date:todayISO(-2),type:'income',category:'Client Work',amount:400,currency:'EUR',note:'Retainer'}
+  ];
+  state.recurringCosts=[
+    {id:uid(),name:'Rent',amount:900,currency:'EUR',scheduleType:'dom',day:1},
+    {id:uid(),name:'Gym',amount:45,currency:'EUR',scheduleType:'dow',week:3,weekday:3}
+  ];
+  state.savingTargets=[
+    {id:uid(),purpose:'Tax',customPurpose:'',mode:'percent',value:25},
+    {id:uid(),purpose:'Trips',customPurpose:'',mode:'amount',value:120}
+  ];
+  save(state);
+}
+function uid(){return Math.random().toString(36).slice(2,9)}
+function todayISO(off=0){const d=new Date();d.setDate(d.getDate()+off);return d.toISOString().slice(0,10)}
+function isoAdd(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x.toISOString().slice(0,10)}
+function monthOf(iso){return iso.slice(0,7)}
+function inMonth(iso,ym){return iso.startsWith(ym)}
+function esc(s){return (s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
+function fmtMoney(n,cur){cur=cur||state.displayCurrency||'EUR';let sym=cur==='EUR'?'€':cur==='USD'?'$':cur==='GBP'?'£':cur+' ';return sym+' '+Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
+function fmtH(n){return (Math.round(n*4)/4).toString()}
+function addDays(iso,n){const d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
+function daysInMonth(ym){const [y,m]=ym.split('-').map(Number);return new Date(y,m,0).getDate()}
+function startWeekday(ym){const [y,m]=ym.split('-').map(Number);return new Date(y,m-1,1).getDay()}
+function shiftMonth(dir){const [y,m]=state.monthCursor.split('-').map(Number);const d=new Date(y,m-1+dir,1);state.monthCursor=d.toISOString().slice(0,7);save(state);renderAll()}
+
+$$('.tabbtn').forEach(btn=>{btn.addEventListener('click',()=>{const tab=btn.dataset.tab;$$('.tabbtn').forEach(b=>b.classList.toggle('active',b===btn));$$('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+tab));if(tab==='dashboard') renderDashboard(); if(tab==='timesheet'){renderCalendar();renderTimesheet();renderBudget()} if(tab==='settings'){renderEmployers();renderSettingsRecurring();renderSettingsSavingTargets();bindEmployerUI();bindSettingsRecurringUI();bindSettingsSavingUI()} window.scrollTo({top:0,behavior:'smooth'})})});
+$('#prevMonth').addEventListener('click',()=>shiftMonth(-1));$('#nextMonth').addEventListener('click',()=>shiftMonth(1));
+
+const sheets={time:$('#sheet-time'),budget:$('#sheet-budget'),settle:$('#sheet-settle'),export:$('#sheet-export')};
+function openSheet(name){$$('.sheet').forEach(s=>{if(s) s.classList.remove('open')});$('#overlay').classList.add('show');if(sheets[name]) sheets[name].classList.add('open')}
+function closeSheets(){$$('.sheet').forEach(s=>{if(s) s.classList.remove('open')});$('#overlay').classList.remove('show')}
+$('#overlay')?.addEventListener('click',closeSheets);$$('[data-close]').forEach(b=>b.addEventListener('click',closeSheets));
+$('#openTimeBtn')?.addEventListener('click',()=>{newTime();openSheet('time')});$('#openBudgetBtn')?.addEventListener('click',()=>{newBudget();openSheet('budget')});$('#openSettleBtn')?.addEventListener('click',()=>{renderSettlement();openSheet('settle')});$('#exportBtn')?.addEventListener('click',()=>openSheet('export'))
+
+// settlement swipe-select state
+let settleRange={start:null,end:null,active:false};
+function rangeOrdered(){ if(!settleRange.start||!settleRange.end) return null; let a=settleRange.start,b=settleRange.end; if(a>b){let t=a;a=b;b=t} return {from:a,to:b} }
+function isInSettleRange(iso){ const o=rangeOrdered(); if(!o) return false; return iso>=o.from && iso<=o.to }
+function updateSettleInline(){
+  const holder=$('#settleInline'); if(!holder) return;
+  const o=rangeOrdered();
+  if(!o || o.from===o.to){ holder.style.display='none'; holder.innerHTML=''; return; }
+  const entries=state.timeEntries.filter(t=>t.date>=o.from && t.date<=o.to);
+  const hrs=entries.reduce((s,t)=>s+(t.hours||0),0);
+  const amt=entries.reduce((s,t)=>s+(t.hours||0)*(t.rate||0),0);
+  holder.style.display='flex';
+  holder.innerHTML=`<div style="font-size:12.5px;font-weight:700">${o.from} → ${o.to} • ${entries.length} days • ${fmtH(hrs)}h • ${fmtMoney(amt)}</div><div class="split"><button class="btn small" id="settleClearBtn" type="button">Clear</button><button class="btn small primary" id="settleInlineBtn" type="button">Settle</button></div>`;
+  holder.querySelector('#settleClearBtn')?.addEventListener('click',()=>{settleRange={start:null,end:null,active:false}; updateSettleInline(); renderCalendar();});
+  holder.querySelector('#settleInlineBtn')?.addEventListener('click',()=>{ if(o){ $('#settleFrom').value=o.from; $('#settleTo').value=o.to; $('#settleMode').value='custom'; state.settlementMode='custom'; save(state); renderSettlement(); openSheet('settle'); }});
+}
+
+function renderCalendar(){
+  const ym=state.monthCursor;const mount=$('#calendarMount');const dim=daysInMonth(ym);const startDow=(startWeekday(ym)+6)%7;const first=new Date(ym+'-01T00:00:00');const monthLabel=first.toLocaleString(undefined,{month:'long',year:'numeric'});const today=todayISO(0);
+  const entriesByDate={};state.timeEntries.forEach(t=>{if(!inMonth(t.date,ym)) return;entriesByDate[t.date]=entriesByDate[t.date]||{hours:0,count:0};entriesByDate[t.date].hours+=t.hours||0;entriesByDate[t.date].count++});
+  let html=`<div class="cal-head"><div class="split"><strong style="font-size:13.5px">${monthLabel}</strong><span class="inline-note">tap = entry • drag = settle</span></div><div class="split"><button class="btn small" id="calPrev" type="button">‹</button><button class="btn small" id="calNext" type="button">›</button></div></div><div class="cal-grid" id="calGrid">`;
+  ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d=>html+=`<div class="cal-dow">${d}</div>`);
+  for(let i=0;i<startDow;i++) html+=`<div class="cal-day muted"><span class="cal-num">&nbsp;</span></div>`;
+  for(let d=1;d<=dim;d++){const dd=String(d).padStart(2,'0');const iso=ym+'-'+dd;const isToday=iso===today;const sel=state.calendarSelected===iso;const info=entriesByDate[iso];const o=rangeOrdered();const inR=o && iso>=o.from && iso<=o.to;const isStart=o && iso===o.from;const isEnd=o && iso===o.to; html+=`<div class="cal-day ${isToday?'today':''} ${info?'has-entry':''} ${sel?'selected':''} ${inR?'in-range':''} ${isStart?'range-start':''} ${isEnd?'range-end':''}" data-cal-date="${iso}"><span class="cal-num">${d}</span>${info?`<span class="meta-mini">${fmtH(info.hours)}h</span>`:`<span class="meta-mini" style="opacity:.45">—</span>`}</div>`}
+  const totalCells=startDow+dim;const rem=(7-totalCells%7)%7;for(let i=0;i<rem;i++) html+=`<div class="cal-day muted"><span class="cal-num">&nbsp;</span></div>`;
+  html+=`</div>`;mount.innerHTML=html;
+  mount.querySelector('#calPrev')?.addEventListener('click',()=>shiftMonth(-1));mount.querySelector('#calNext')?.addEventListener('click',()=>shiftMonth(1));
+
+  const grid=mount.querySelector('#calGrid');
+  let dragActive=false; let dragStart=null; let dragMoved=false;
+  function applyRange(startIso, endIso){ settleRange.start=startIso; settleRange.end=endIso; settleRange.active=true; updateSettleInline(); // live re-render only classes for speed – full re-render acceptable for simplicity if not dragging heavily
+    const days=mount.querySelectorAll('[data-cal-date]');
+    const o2=rangeOrdered(); if(!o2){ days.forEach(el=>el.classList.remove('in-range','range-start','range-end')); return; }
+    days.forEach(el=>{const iso=el.dataset.calDate; const inR=iso>=o2.from && iso<=o2.to; el.classList.toggle('in-range',!!inR); el.classList.toggle('range-start',iso===o2.from); el.classList.toggle('range-end',iso===o2.to); });
+  }
+  mount.querySelectorAll('[data-cal-date]').forEach(el=>{
+    el.addEventListener('pointerdown',e=>{
+      const iso=el.dataset.calDate; dragActive=true; dragStart=iso; dragMoved=false; settleRange.start=iso; settleRange.end=iso; e.currentTarget.setPointerCapture?.(e.pointerId); applyRange(iso,iso);
+    });
+    el.addEventListener('pointerenter',e=>{
+      if(!dragActive) return; dragMoved=true; const iso=el.dataset.calDate; applyRange(dragStart,iso);
+    });
+    el.addEventListener('pointerup',e=>{
+      if(!dragActive) return; dragActive=false;
+      const iso=el.dataset.calDate;
+      const o=rangeOrdered();
+      try{ e.currentTarget.releasePointerCapture?.(e.pointerId)}catch{}
+      if(dragMoved && o && o.from!==o.to){
+        // range selection – keep and show inline
+        updateSettleInline();
+      } else {
+        // single tap – treat as entry creation
+        state.calendarSelected=iso; save(state); newTime(iso); openSheet('time'); renderCalendar();
+      }
+    });
+    // fallback click for non-pointer browsers – only if not already handled
+    el.addEventListener('click',e=>{
+      if(dragMoved){ e.preventDefault(); e.stopImmediatePropagation(); dragMoved=false; return; }
+    });
+  });
+  // global pointerup to cancel drag if released outside
+  function onUp(){ if(dragActive){ dragActive=false; dragMoved=false; } }
+  window.addEventListener('pointerup', onUp, {once:false});
+}
+
+function renderAll(){renderDashboard();renderCalendar();renderTimesheet();try{renderBudget()}catch(e){};renderEmployers();renderSettingsRecurring();renderSettingsSavingTargets();try{updateSettleInline()}catch(e){}}
+
+function renderDashboard(){
+  const ym=state.monthCursor;if($('#dashMonth')) $('#dashMonth').textContent=new Date(ym+'-01T00:00:00').toLocaleString(undefined,{month:'long',year:'numeric'});
+  const mTime=state.timeEntries.filter(t=>inMonth(t.date,ym));
+  const mIn=state.budgetEntries.filter(b=>b.type==='income'&&inMonth(b.date,ym));
+  const mEx=state.budgetEntries.filter(b=>b.type==='expense'&&inMonth(b.date,ym));
+  const hours=mTime.reduce((s,t)=>s+(t.hours||0),0);
+  const income=mIn.reduce((s,b)=>s+(b.amount||0),0);
+  const expense=mEx.reduce((s,b)=>s+(b.amount||0),0);
+  const allIn=state.budgetEntries.filter(b=>b.type==='income').reduce((s,b)=>s+(b.amount||0),0);
+  const allEx=state.budgetEntries.filter(b=>b.type==='expense').reduce((s,b)=>s+(b.amount||0),0);
+  const bal=allIn-allEx;
+  const metrics=$('#metrics');if(metrics){metrics.innerHTML='';
+  const mk=(label,val,hint,accent)=>{const d=document.createElement('div');d.className='metric'+(accent?' accent':'');d.innerHTML=`<div class="label">${label}</div><div class="value">${val}</div>${hint?`<div class="hint">${hint}</div>`:''}`;return d}
+  metrics.appendChild(mk('MTD HOURS',fmtH(hours)+'h',ym));
+  metrics.appendChild(mk('MTD INCOME',fmtMoney(income),mIn.length+' entries'));
+  metrics.appendChild(mk('MTD EXPENSE',fmtMoney(expense),mEx.length+' entries'));
+  metrics.appendChild(mk('BALANCES',fmtMoney(bal),'all-time',true));}
+  // insight
+  const mount=$('#insightsMount');if(mount){mount.innerHTML='';
+  const up=upcomingRecurring(14);
+  if(up.length){
+    const c=document.createElement('div');c.className='insight-card';let h=`<strong>Upcoming in 14d</strong><div style="margin-top:6px;display:grid;gap:4px">`;up.forEach(u=>{
+      const sched=u.scheduleType==='dow'?formatRecurring(u):formatDomRecurring(u.day);
+      h+=`<div class="split"><span class="badge">${esc(u.name)}</span><span>${fmtMoney(u.amount,u.currency)} • ${esc(sched)} • ${u.due}</span></div>`
+    });h+=`</div>`;c.innerHTML=h;mount.appendChild(c)
+  }
+  const tgs=[...state.savingTargets];
+  if(tgs.length){
+    const c=document.createElement('div');c.className='insight-card';let h=`<strong>Saving rules</strong><div class="inline-note" style="margin-top:2px">% or fixed amount saved from each income</div><div style="margin-top:8px;display:grid;gap:6px">`;
+    const mInCount=mIn.length;
+    tgs.forEach(t=>{
+      const pur=(t.purpose||'Saving');
+      const suggested=t.mode==='percent'? income*(t.value/100) : (t.value * (mInCount||0));
+      const countLabel=mInCount===1?'1 income':`${mInCount} incomes`;
+      h+=`<div class="row" style="padding:8px 10px"><div class="left"><div class="title">${esc(pur)}</div><div class="meta"><span>${t.mode==='percent'?` ${t.value}% per income`:` ${fmtMoney(t.value)} per income`} • MTD → ${fmtMoney(suggested)} from ${countLabel}</span></div></div></div>`;
+    });h+=`</div>`;c.innerHTML=h;mount.appendChild(c)
+  }}
+  // recent time
+  const rt=$('#recentTime');if(rt){rt.innerHTML='';[...state.timeEntries].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8).forEach(t=>{const r=document.createElement('div');r.className='row';r.innerHTML=`<div class="left"><div class="title">${esc(t.employerName||t.project||'—')} • ${fmtH(t.hours)}h</div><div class="meta"><span>${t.date}</span><span class="badge gray">${esc(t.employerName||'')}</span><span class="badge">${(t.rate||0)?(t.rate+'/h'):''}</span></div></div><div>${fmtMoney(t.hours*t.rate,t.currency)}</div>`;r.addEventListener('click',()=>{editTime(t.id);openSheet('time')});rt.appendChild(r)});}
+  const td=$('#targetsDashList');if(td){td.innerHTML='';const tgs=[...state.savingTargets];if(!tgs.length) td.innerHTML='<div class="inline-note">No targets — add in Settings</div>'; else tgs.slice(0,6).forEach(t=>{
+    const pur=(t.purpose||'Saving');
+    const d=document.createElement('div');d.className='row';d.innerHTML=`<div class="left"><div class="title">${esc(pur)}</div><div class="meta"><span>${t.mode==='percent'?` ${t.value}% per income`:` ${fmtMoney(t.value)} per income`}</span></div></div></div>`;td.appendChild(d)
+  })}
+}
+
+function weekdayName(num){const names=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];return names[num]||''}
+function weekdayShort(num){const s=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];return s[num]||''}
+function ordinalWord(n){ if(n===-1) return 'Last'; return ordLabel(n); }
+function formatRecurring(rc){
+  if(rc.scheduleType==='dow'){
+    const w=rc.week;
+    const wd=rc.weekday;
+    if(w===-1) return `Last ${weekdayName(wd)}`;
+    return `${ordLabel(w)} ${weekdayName(wd)}`;
+  }
+  return formatDomRecurring(rc.day)
+}
+function isNthWeekdayOfMonth(dateObj, nth, weekday){
+  // weekday 0=Sun..6=Sat, nth 1-4 or -1 for last
+  const y=dateObj.getFullYear(); const m=dateObj.getMonth(); const d=dateObj.getDate();
+  if(dateObj.getDay()!==weekday) return false;
+  if(nth===-1){
+    // check if adding 7 days goes to next month
+    const next=new Date(y,m,d+7); return next.getMonth()!==m;
+  }
+  const first=new Date(y,m,1);
+  const firstWd=first.getDay();
+  const offset=(weekday - firstWd + 7)%7;
+  const firstOcc=1+offset;
+  const occ=Math.floor((d - firstOcc)/7)+1;
+  return occ===nth && d>=firstOcc;
+}
+function isRecurringOn(rc, dateObj){
+  if(rc.scheduleType==='dow'){
+    return isNthWeekdayOfMonth(dateObj, rc.week, rc.weekday);
+  }
+  return dateObj.getDate()===rc.day;
+}
+function upcomingRecurring(days){
+  const now=new Date();const res=[];
+  for(let i=0;i<days;i++){
+    const d=new Date(now);d.setDate(d.getDate()+i);
+    const iso=d.toISOString().slice(0,10);
+    state.recurringCosts.forEach(rc=>{
+      try{
+        if(isRecurringOn(rc, d)){ res.push({...rc,due:iso}) }
+      }catch(e){}
+    })
+  }
+  return res.slice(0,10)
+}
+
+function renderTimesheet(){
+  const list=$('#timeList');if(!list) return;list.innerHTML=`<div style="padding:10px"><strong style="font-size:13px">Entries — ${state.monthCursor}</strong></div><div class="list" id="timeListInner"></div>`;
+  const inner=$('#timeListInner');const items=state.timeEntries.filter(t=>inMonth(t.date,state.monthCursor)).sort((a,b)=>b.date.localeCompare(a.date));
+  if(!items.length){inner.innerHTML='<div class="inline-note" style="padding:12px">No entries this month</div>';return}
+  items.forEach(t=>{const r=document.createElement('div');r.className='row';r.innerHTML=`<div class="left"><div class="title">${esc(t.employerName||'—')} • ${fmtH(t.hours)}h${t.start?` • ${esc(t.start)}→${esc(t.end||'')}`:''}</div><div class="meta"><span>${t.date}</span><span class="badge gray">${esc(t.employerName||'')}</span><span>${fmtMoney(t.rate,t.currency)}/h</span></div></div><div>${fmtMoney(t.hours*t.rate,t.currency)}</div>`;r.addEventListener('click',()=>{editTime(t.id);openSheet('time')});inner.appendChild(r)})
+}
+
+function renderBudget(){
+  const CAT_INCOME=['Client Work','Retainer','Settlement','Other Income'];const CAT_EXP=['Software','Hardware','Travel','Food','Rent','Marketing','Tax','Other'];
+  const sel=$('#b_cat');if(sel){const cur=sel.value||'';const typeEl=$('#b_type');const type=typeEl? typeEl.value : 'income';const cats=type==='income'?CAT_INCOME:CAT_EXP;sel.innerHTML='';cats.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o)});if(cur) sel.value=cur}
+  const link=$('#b_link');if(link){const cur=link.value;link.innerHTML='<option value="">— not linked —</option>';state.timeEntries.slice(0,120).forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=`${t.date} • ${esc(t.employerName||'')} • ${fmtH(t.hours)}h`.trim();link.appendChild(o)});if(cur) link.value=cur}
+  const list=$('#budgetList');if(!list) return;list.innerHTML='';const items=[...state.budgetEntries].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,80);
+  if(!items.length){list.innerHTML='<div class="inline-note" style="padding:12px">No budget entries</div>';return}
+  items.forEach(b=>{const r=document.createElement('div');r.className='row';r.innerHTML=`<div class="left"><div class="title"><span class="badge ${b.type==='income'?'green':'red'}" style="margin-right:6px">${b.type}</span>${esc(b.category)} • ${fmtMoney(b.amount,b.currency)}</div><div class="meta"><span>${b.date}</span>${b.note?`<span>${esc(b.note)}</span>`:''}</div></div><div>${b.type==='income'?'+':''}${fmtMoney(b.amount,b.currency)}</div>`;r.addEventListener('click',()=>{editBudget(b.id);openSheet('budget')});list.appendChild(r)})
+}
+
+function settlementFromAuto(){
+  // if user has swipe-selected range, respect it
+  try{const o=rangeOrdered&&rangeOrdered(); if(o) return o.from;}catch(e){}
+  if(state.settlements.length){const last=[...state.settlements].sort((a,b)=>b.to.localeCompare(a.to)).pop();if(last) return addDays(last.to,1)}
+  return state.monthCursor+'-01'
+}
+function renderSettlement(){
+  let from=settlementFromAuto();if(!$('#settleFrom')) return; $('#settleFrom').value=from;
+  const modeEl=$('#settleMode'); const mode=modeEl? modeEl.value||state.settlementMode : state.settlementMode;
+  let to='';
+  if(mode==='custom'){to=$('#settleTo').value|| (rangeOrdered&&rangeOrdered() ? rangeOrdered().to : todayISO(0))}
+  else if(mode==='monthly'){const d=new Date(from+'T00:00:00');to=new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().slice(0,10)}
+  else if(mode==='biweekly'){to=addDays(from,13)}
+  $('#settleTo').value=to;
+  const entries=state.timeEntries.filter(t=>t.date>=from&&t.date<=to);
+  const hrs=entries.reduce((s,t)=>s+(t.hours||0),0);const amt=entries.reduce((s,t)=>s+(t.hours||0)*(t.rate||0),0);
+  if($('#settlePreview')) $('#settlePreview').textContent=entries.length?`${entries.length} entries • ${fmtH(hrs)}h • Est. ${fmtMoney(amt)} • ${from} → ${to}`:'No entries in range';
+  const h=$('#settleHistory');if(h){h.innerHTML='';[...state.settlements].sort((a,b)=>b.at.localeCompare(a.at)).slice(0,10).forEach(s=>{const r=document.createElement('div');r.className='row';r.innerHTML=`<div class="left"><div class="title">Settled ${s.from} → ${s.to}</div><div class="meta"><span>${fmtH(s.hours)}h</span><span>${fmtMoney(s.amount,s.currency)}</span><span>${new Date(s.at).toLocaleString()}</span></div></div><div><button class="btn small" data-undo="${s.id}" type="button">Undo</button></div>`;h.appendChild(r)});h.querySelectorAll('[data-undo]').forEach(btn=>btn.addEventListener('click',()=>undoSettle(btn.dataset.undo)))}
+}
+
+$('#settleMode')?.addEventListener('change',()=>{state.settlementMode=$('#settleMode').value;save(state);renderSettlement()});
+$('#settleTo')?.addEventListener('change',renderSettlement);
+$('#doSettle')?.addEventListener('click',()=>{
+  const from=$('#settleFrom').value;const to=$('#settleTo').value;if(!from||!to) return;
+  const entries=state.timeEntries.filter(t=>t.date>=from&&t.date<=to);
+  if(!entries.length) return;
+  const hrs=entries.reduce((s,t)=>s+(t.hours||0),0);const amt=entries.reduce((s,t)=>s+(t.hours||0)*(t.rate||0),0);
+  const cur=state.displayCurrency||entries[0]?.currency||'EUR';
+  const sid=uid();state.settlements.push({id:sid,from,to,hours:hrs,amount:amt,currency:cur,at:new Date().toISOString()});
+  state.budgetEntries.push({id:uid(),date:to,type:'income',category:'Settlement',amount:amt,currency:cur,note:`Settlement ${from}→${to} ${fmtH(hrs)}h`,linkedTimeId:''});
+  save(state);settleRange={start:null,end:null,active:false};try{updateSettleInline()}catch(e){};renderSettlement();try{renderBudget()}catch(e){};renderDashboard();closeSheets();renderCalendar();
+});
+function undoSettle(id){
+  const st=state.settlements.find(s=>s.id===id);if(!st) return;
+  state.settlements=state.settlements.filter(s=>s.id!==id);
+  // remove budget entry created from this settlement (heuristic: note contains range)
+  state.budgetEntries=state.budgetEntries.filter(b=>!(b.category==='Settlement'&&b.note&&b.note.includes(`${st.from}→${st.to}`)));
+  save(state);renderSettlement();try{renderBudget()}catch(e){};renderDashboard();
+}
+
+function newTime(prefDate){$('#timeFormTitle').textContent='New';$('#t_id').value='';const d=prefDate||state.calendarSelected||todayISO(0);$('#t_date').value=d;$('#t_hours').value='';$('#t_start').value='';$('#t_end').value='';const def=state.employers.find(e=>e.id===state.defaultEmployerId);if($('#t_employer')) $('#t_employer').value=def?def.id:'';$('#t_rate').value=def?def.hourlyRate:'';if($('#t_curr')){ $('#t_curr').value=def?def.currency:(state.displayCurrency||'EUR'); ensureCurrOptions();} $('#t_delete').style.display='none';if($('#t_hint')) $('#t_hint').textContent=def?`Default ${def.name} • ${def.currency} ${def.hourlyRate}/h`:''}
+function editTime(id){const t=state.timeEntries.find(x=>x.id===id);if(!t) return;$('#timeFormTitle').textContent='Edit';$('#t_id').value=t.id;$('#t_date').value=t.date;$('#t_hours').value=t.hours;$('#t_start').value=t.start||'';$('#t_end').value=t.end||'';ensureCurrOptions(t.currency);if($('#t_employer')) $('#t_employer').value=t.employerId||'';$('#t_rate').value=t.rate||'';if($('#t_curr')) $('#t_curr').value=t.currency||state.displayCurrency||'EUR';$('#t_delete').style.display='inline-flex';if($('#t_hint')) $('#t_hint').textContent=''}
+function ensureCurrOptions(extra){const sel=$('#t_curr');if(!sel) return;const vals=new Set(Array.from(sel.options).map(o=>o.value));['EUR','USD','GBP'].forEach(v=>vals.add(v));(state.employers||[]).forEach(e=>{if(e.currency) vals.add(e.currency)});if(extra) vals.add(extra);sel.innerHTML='';Array.from(vals).forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o)})}
+$('#t_employer')?.addEventListener('change',()=>{const id=$('#t_employer').value;const e=state.employers.find(x=>x.id===id);if(e){$('#t_rate').value=e.hourlyRate;if($('#t_curr')){ $('#t_curr').value=e.currency;ensureCurrOptions(e.currency);} if($('#t_hint')) $('#t_hint').textContent=`Default ${e.name} • ${e.currency} ${e.hourlyRate}/h`} else if($('#t_hint')) $('#t_hint').textContent=''});
+$('#t_start, #t_end').forEach?null:(()=>{['t_start','t_end'].forEach(id=>{$( '#'+id)?.addEventListener('change',calcHours)})})();
+function calcHours(){const s=$('#t_start').value;const e=$('#t_end').value;if(s&&e){const [sh,sm]=s.split(':').map(Number);const [eh,em]=e.split(':').map(Number);let d=(eh+em/60)-(sh+sm/60);if(d<0) d+=24;$('#t_hours').value=(Math.round(d*4)/4).toFixed(2)}}
+$('#t_start')?.addEventListener('change',calcHours);$('#t_end')?.addEventListener('change',calcHours);
+$('#timeForm')?.addEventListener('submit',e=>{e.preventDefault();const id=$('#t_id').value||uid();const employerId=$('#t_employer')? $('#t_employer').value : '';const emp=state.employers.find(x=>x.id===employerId);const obj={id,date:$('#t_date').value,hours:parseFloat($('#t_hours').value)||0,start:$('#t_start').value||'',end:$('#t_end').value||'',employerId,employerName:emp?emp.name:'',project:'',rate:parseFloat($('#t_rate').value)||0,currency:$('#t_curr')? $('#t_curr').value : (state.displayCurrency||'EUR')};const i=state.timeEntries.findIndex(x=>x.id===id);if(i>=0) state.timeEntries[i]=obj; else state.timeEntries.push(obj);save(state);renderCalendar();renderTimesheet();renderDashboard();closeSheets()});
+$('#t_delete')?.addEventListener('click',()=>{const id=$('#t_id').value;if(!id) return;showDialog({title:'Delete entry?',okLabel:'Delete'},()=>{state.timeEntries=state.timeEntries.filter(x=>x.id!==id);save(state);renderCalendar();renderTimesheet();renderDashboard();closeSheets()})});
+
+function newBudget(){$('#bFormTitle').textContent='New';$('#b_id').value='';$('#b_date').value=todayISO(0);$('#b_type').value='income';$('#b_amount').value='';$('#b_curr').value=state.displayCurrency||'EUR';$('#b_note').value='';$('#b_link').value='';$('#b_delete').style.display='none';renderBudget();}
+function editBudget(id){const b=state.budgetEntries.find(x=>x.id===id);if(!b) return;$('#bFormTitle').textContent='Edit';$('#b_id').value=b.id;$('#b_date').value=b.date;$('#b_type').value=b.type;renderBudget();$('#b_cat').value=b.category;$('#b_amount').value=b.amount;$('#b_curr').value=b.currency;$('#b_note').value=b.note||'';$('#b_link').value=b.linkedTimeId||'';$('#b_delete').style.display='inline-flex'}
+$('#b_type').addEventListener('change',renderBudget);
+$('#budgetForm').addEventListener('submit',e=>{e.preventDefault();const id=$('#b_id').value||uid();const obj={id,date:$('#b_date').value,type:$('#b_type').value,category:$('#b_cat').value,amount:parseFloat($('#b_amount').value)||0,currency:$('#b_curr').value,note:$('#b_note').value.trim(),linkedTimeId:$('#b_link').value||''};const i=state.budgetEntries.findIndex(x=>x.id===id);if(i>=0) state.budgetEntries[i]=obj; else state.budgetEntries.push(obj);save(state);renderBudget();renderDashboard();closeSheets()});
+$('#b_delete').addEventListener('click',()=>{const id=$('#b_id').value;if(!id) return;showDialog({title:'Delete budget entry?',okLabel:'Delete'},()=>{state.budgetEntries=state.budgetEntries.filter(x=>x.id!==id);save(state);renderBudget();renderDashboard();closeSheets()})});
+
+function renderEmployers(){const list=$('#employerList');if(!list) return;list.innerHTML='';const emps=state.employers||[];if(!emps.length){list.innerHTML='<div class="inline-note" style="padding:8px">No employers — add one to pre-fill rate</div>';return}emps.forEach(emp=>{const isDef=emp.id===state.defaultEmployerId;const el=document.createElement('div');el.className='row';el.innerHTML=`<div class="left"><div class="title">${esc(emp.name)} ${isDef?'<span class="badge green" style="margin-left:6px">default</span>':''}</div><div class="meta"><span>${esc(emp.currency)} ${Number(emp.hourlyRate).toFixed(2)}/h</span></div></div><button class="btn small" data-edit-emp="${emp.id}" type="button">Edit</button>`;list.appendChild(el)});list.querySelectorAll('[data-edit-emp]').forEach(b=>b.addEventListener('click',()=>editEmployer(b.dataset.editEmp)))}
+function editEmployer(id){const e=state.employers.find(x=>x.id===id);if(!e) return;$('#emp_id').value=e.id;$('#emp_name').value=e.name;$('#emp_rate').value=e.hourlyRate;const std=['EUR','USD','GBP'];if(std.includes(e.currency)){$('#emp_curr_select').value=e.currency;$('#emp_curr_custom').style.display='none'} else {$('#emp_curr_select').value='custom';$('#emp_curr_custom').style.display='block';$('#emp_curr_custom').value=e.currency}$('#emp_default').checked=e.id===state.defaultEmployerId;$('#employerFormWrap').style.display='block';$('#emp_delete').style.display='inline-flex'}
+function bindEmployerUI(){const add=$('#addEmployerBtn');if(add && !add._b){add._b=true;add.addEventListener('click',()=>{showEmployerForm()})}const sel=$('#emp_curr_select');if(sel && !sel._b){sel._b=true;sel.addEventListener('change',()=>{const v=sel.value;$('#emp_curr_custom').style.display=v==='custom'?'block':'none'})}const saveBtn=$('#emp_save');if(saveBtn && !saveBtn._b){saveBtn._b=true;saveBtn.addEventListener('click',saveEmployer)}const cancel=$('#emp_cancel');if(cancel && !cancel._b){cancel._b=true;cancel.addEventListener('click',()=>{$('#employerFormWrap').style.display='none'})}const del=$('#emp_delete');if(del && !del._b){del._b=true;del.addEventListener('click',()=>{const id=$('#emp_id').value;if(!id) return;showDialog({title:'Delete employer?',hint:'Time entries keep name but lose link',okLabel:'Delete'},()=>{const deletedName=state.employers.find(x=>x.id===id)?.name||'';state.timeEntries.forEach(t=>{if(t.employerId===id){t.employerId=''; if(!t.employerName) t.employerName=deletedName}});state.employers=state.employers.filter(x=>x.id!==id);if(state.defaultEmployerId===id) state.defaultEmployerId=state.employers[0]?.id||null;save(state);renderEmployers();renderTimesheet();renderDashboard();$('#employerFormWrap').style.display='none';populateEmployerSelects()})})}}
+function showEmployerForm(){const wrap=$('#employerFormWrap');wrap.style.display='block';$('#emp_id').value='';$('#emp_name').value='';$('#emp_rate').value='';$('#emp_curr_select').value='EUR';$('#emp_curr_custom').style.display='none';$('#emp_curr_custom').value='';$('#emp_default').checked=!(state.employers||[]).length;$('#emp_delete').style.display='none'}
+function saveEmployer(){const id=$('#emp_id').value||uid();let curr=$('#emp_curr_select').value;if(curr==='custom'){curr=($('#emp_curr_custom').value.trim().toUpperCase()||'EUR')}const obj={id,name:$('#emp_name').value.trim(),hourlyRate:parseFloat($('#emp_rate').value)||0,currency:curr};if(!obj.name){const e=$('#emp_name'); if(e){e.style.borderColor='#b42318'; e.focus();} return}const i=state.employers.findIndex(x=>x.id===id);if(i>=0) state.employers[i]=obj; else state.employers.push(obj);if($('#emp_default').checked) state.defaultEmployerId=id;if(state.defaultEmployerId===id) state.displayCurrency=curr;save(state);renderEmployers();populateEmployerSelects();$('#employerFormWrap').style.display='none'}
+function populateEmployerSelects(){const esel=$('#t_employer');if(esel){const cur=esel.value;esel.innerHTML='<option value="">— no employer —</option>';(state.employers||[]).forEach(e=>{const o=document.createElement('option');o.value=e.id;o.textContent=e.name+(e.id===state.defaultEmployerId?' • default':'');esel.appendChild(o)});if(cur) esel.value=cur};ensureCurrOptions()}
+
+function renderSettingsRecurring(){const list=$('#settingsRecurringList');if(!list) return;list.innerHTML='';if(!state.recurringCosts.length){list.innerHTML='<div class="inline-note" style="padding:8px">No recurring yet — e.g. Rent on day 1, or 3rd Wednesday</div>';return}state.recurringCosts.forEach(rc=>{const sched=rc.scheduleType==='dow'?formatRecurring(rc):formatDomRecurring(rc.day); const el=document.createElement('div');el.className='row';el.innerHTML=`<div class="left"><div class="title">${esc(rc.name)}</div><div class="meta"><span>${fmtMoney(rc.amount,rc.currency||state.displayCurrency)} • Every ${esc(sched)} of month</span></div></div><button class="btn small" data-edit-sr="${rc.id}" type="button">Edit</button>`;list.appendChild(el)});list.querySelectorAll('[data-edit-sr]').forEach(b=>b.addEventListener('click',()=>editSettingsRecurring(b.dataset.editSr)))}
+function ordLabel(n){
+  const v=parseInt(n,10);
+  if(v===-1) return 'Last';
+  const mod100=v%100;
+  if(mod100>=11 && mod100<=13) return v+'th';
+  const mod10=v%10;
+  if(mod10===1) return v+'st';
+  if(mod10===2) return v+'nd';
+  if(mod10===3) return v+'rd';
+  return v+'th';
+}
+function formatDomRecurring(day){
+  if(day===31) return 'Last Day';
+  return ordLabel(day)+' Day';
+}
+function buildOrdinalOptions(unit, selected){
+  const sel=$('#sr_ordinal'); if(!sel) return;
+  const cur=selected!=null?String(selected):sel.value;
+  const isDay=unit==='day';
+  const max=isDay?31:4;
+  const opts=[];
+  for(let i=1;i<=max;i++){ opts.push({v:String(i),label:ordLabel(i)}); }
+  opts.push({v:'-1',label:'Last'});
+  sel.innerHTML='';
+  opts.forEach(o=>{
+    const op=document.createElement('option');op.value=o.v;op.textContent=o.label;sel.appendChild(op)
+  });
+  // restore
+  if(cur && opts.some(o=>o.v===String(cur))){ sel.value=String(cur); }
+  else { sel.value=opts[0].v; }
+}
+function updateRecurringPreview(){
+  const ordEl=$('#sr_ordinal');const unitEl=$('#sr_unit');const prev=$('#sr_preview');if(!ordEl||!unitEl||!prev) return;
+  const ord=ordEl.value;const unit=unitEl.value;
+  let text='';
+  if(unit==='day'){
+    if(ord==='-1') text='→ Last day of each month (31st / month-end)';
+    else text=`→ ${ordLabel(ord)} day of each month`;
+  } else {
+    const wd=weekdayName(parseInt(unit,10));
+    if(ord==='-1') text=`→ Last ${wd} of each month`;
+    else text=`→ ${ordLabel(ord)} ${wd} of each month`;
+  }
+  prev.textContent=text;
+}
+function editSettingsRecurring(id){
+  const rc=state.recurringCosts.find(x=>x.id===id);if(!rc) return;
+  $('#sr_id').value=rc.id;$('#sr_name').value=rc.name;$('#sr_amount').value=rc.amount;
+  const unitEl=$('#sr_unit');
+  if(rc.scheduleType==='dow'){
+    unitEl.value=String(rc.weekday);
+    buildOrdinalOptions(unitEl.value, rc.week);
+    $('#sr_ordinal').value=String(rc.week);
+  } else {
+    unitEl.value='day';
+    buildOrdinalOptions('day', rc.day);
+    $('#sr_ordinal').value=String(rc.day||1);
+  }
+  updateRecurringPreview();
+  $('#settingsRecurringFormWrap').style.display='block';$('#sr_delete').style.display='inline-flex'
+}
+function bindSettingsRecurringUI(){
+  const add=$('#addSettingsRecurringBtn');if(add && !add._b){add._b=true;add.addEventListener('click',()=>{
+    $('#settingsRecurringFormWrap').style.display='block';$('#sr_id').value='';$('#sr_name').value='';$('#sr_amount').value='';
+    const unitEl=$('#sr_unit'); unitEl.value='day';
+    buildOrdinalOptions('day','1');
+    $('#sr_ordinal').value='1';
+    updateRecurringPreview();
+    $('#sr_delete').style.display='none'
+  })}
+  const ordEl=$('#sr_ordinal');const unitEl=$('#sr_unit');
+  if(unitEl && !unitEl._b){
+    unitEl._b=true;
+    unitEl.addEventListener('change',()=>{
+      const curOrd=ordEl?.value||'1';
+      // when switching unit, try preserve, but rebuild
+      let keep=curOrd;
+      if(unitEl.value==='day'){
+        // keep as is 1-31 else map 1-4 stays
+      }else{
+        // weekday only 1-4 or -1, if previously >4 clamp to 4
+        if(parseInt(keep,10)>4 && keep!=='-1') keep='4';
+      }
+      buildOrdinalOptions(unitEl.value, keep);
+      updateRecurringPreview();
+    })
+  }
+  if(ordEl && !ordEl._b){ordEl._b=true;ordEl.addEventListener('change',updateRecurringPreview)}
+  const save=$('#sr_save');if(save && !save._b){save._b=true;save.addEventListener('click',saveSettingsRecurring)}
+  const cancel=$('#sr_cancel');if(cancel && !cancel._b){cancel._b=true;cancel.addEventListener('click',()=>$('#settingsRecurringFormWrap').style.display='none')}
+  const del=$('#sr_delete');if(del && !del._b){del._b=true;del.addEventListener('click',()=>{const id=$('#sr_id').value;if(!id) return;showDialog({title:'Delete recurring?',hint:'This recurring cost will be removed from upcoming insights',okLabel:'Delete'},()=>{try{$('#settingsRecurringFormWrap').style.display='none';}catch(e){}try{state.recurringCosts=state.recurringCosts.filter(x=>x.id!==id);}catch(e){}try{save(state);}catch(e){}try{renderSettingsRecurring();}catch(e){}try{renderDashboard();}catch(e){}try{$('#sr_id').value='';}catch(e){}})} )}
+  // initial build if empty
+  if(unitEl && ordEl && ordEl.options.length===0){
+    buildOrdinalOptions(unitEl.value||'day','1');
+    updateRecurringPreview();
+  }
+}
+function saveSettingsRecurring(){
+  const id=$('#sr_id').value||uid();
+  const ordVal=$('#sr_ordinal').value;
+  const unitVal=$('#sr_unit').value;
+  let obj={id,name:$('#sr_name').value.trim(),amount:parseFloat($('#sr_amount').value)||0,currency:state.displayCurrency||'EUR'};
+  if(unitVal==='day'){
+    const d=ordVal==='-1'?31:Math.min(31,Math.max(1,parseInt(ordVal)||1));
+    obj.scheduleType='dom'; obj.day=d;
+  }else{
+    obj.scheduleType='dow';
+    obj.week=parseInt(ordVal)||1; // -1 allowed
+    obj.weekday=parseInt(unitVal)||0;
+  }
+  if(!obj.name) return;
+  const i=state.recurringCosts.findIndex(x=>x.id===id);if(i>=0) state.recurringCosts[i]=obj; else state.recurringCosts.push(obj);save(state);renderSettingsRecurring();renderDashboard();$('#settingsRecurringFormWrap').style.display='none'
+}
+
+function renderSettingsSavingTargets(){const list=$('#settingsSavingList');if(!list) return;list.innerHTML='';if(!state.savingTargets.length){list.innerHTML='<div class="inline-note" style="padding:8px">No targets — save a % or amount per income (Tax = Rent style, rule below)</div>';return}[...state.savingTargets].forEach(t=>{const pur=t.purpose||'Saving';const el=document.createElement('div');el.className='row';el.innerHTML=`<div class="left"><div class="title">${esc(pur)}</div><div class="meta"><span>${t.mode==='percent'?` ${t.value}% per income`:` ${fmtMoney(t.value)} per income`}</span></div></div><button class="btn small" data-edit-st="${t.id}" type="button">Edit</button>`;list.appendChild(el)});list.querySelectorAll('[data-edit-st]').forEach(b=>b.addEventListener('click',()=>editSettingsSaving(b.dataset.editSt)))}
+function editSettingsSaving(id){
+  const t=state.savingTargets.find(x=>x.id===id);if(!t) return;
+  $('#st_id').value=t.id;
+  const purInput=$('#st_purpose');
+  if(purInput) purInput.value = t.purpose || t.customPurpose || '';
+  const modeSel=$('#st_mode');
+  if(modeSel) modeSel.value=t.mode||'percent';
+  const valIn=$('#st_value');
+  if(valIn) valIn.value=t.value!=null?t.value:'';
+  updateSavingValueUI();
+  $('#settingsSavingFormWrap').style.display='block';$('#st_delete').style.display='inline-flex'
+}
+function updateSavingValueUI(){
+  const mode=$('#st_mode')?.value||'percent';
+  const inp=$('#st_value'); const hint=$('#st_hint');
+  if(!inp) return;
+  if(mode==='percent'){
+    inp.placeholder='25'; inp.step='0.1'; inp.max='100';
+    if(hint) hint.textContent='Saves automatically from each income entry. Example: Tax = Rent → save 25% of each income (moved down as requested).';
+  }else{
+    inp.placeholder='120'; inp.step='0.01'; inp.removeAttribute('max');
+    if(hint) hint.textContent='Saves a flat amount from each income. Use % for proportional saving, amount for flat.';
+  }
+}
+function bindSettingsSavingUI(){
+  const add=$('#addSettingsSavingBtn');if(add && !add._b){add._b=true;add.addEventListener('click',()=>{
+    $('#settingsSavingFormWrap').style.display='block';$('#st_id').value='';
+    const pur=$('#st_purpose'); if(pur) pur.value='Tax';
+    const mode=$('#st_mode'); if(mode) mode.value='percent';
+    const val=$('#st_value'); if(val) val.value='25';
+    updateSavingValueUI();$('#st_delete').style.display='none'
+  })}
+  const modeSel=$('#st_mode');if(modeSel && !modeSel._b){modeSel._b=true;modeSel.addEventListener('change',updateSavingValueUI)}
+  const save=$('#st_save');if(save && !save._b){save._b=true;save.addEventListener('click',saveSettingsSaving)}
+  const cancel=$('#st_cancel');if(cancel && !cancel._b){cancel._b=true;cancel.addEventListener('click',()=>$('#settingsSavingFormWrap').style.display='none')}
+  const del=$('#st_delete');if(del && !del._b){del._b=true;del.addEventListener('click',()=>{const id=$('#st_id').value;if(!id) return;showDialog({title:'Delete saving rule?',hint:'This rule will no longer affect saving progress',okLabel:'Delete'},()=>{try{$('#settingsSavingFormWrap').style.display='none';}catch(e){}try{state.savingTargets=state.savingTargets.filter(x=>x.id!==id);}catch(e){}try{save(state);}catch(e){}try{renderSettingsSavingTargets();}catch(e){}try{renderDashboard();}catch(e){}try{$('#st_id').value='';}catch(e){}})} )}
+}
+function saveSettingsSaving(){
+  const id=$('#st_id').value||uid();
+  const purInput=$('#st_purpose');
+  let purpose = purInput ? purInput.value.trim() : '';
+  if(!purpose) purpose='My Saving';
+  // Tax = Rent analogy: purpose is free-form, like Rent name in recurring. Allow any text.
+  const mode=$('#st_mode')?.value||'percent';
+  const valRaw=parseFloat($('#st_value')?.value);
+  if(isNaN(valRaw) || valRaw<0){ const h=$('#st_hint'); if(h){h.textContent='Enter a valid value'; h.style.color='#b42318';} return; }
+  if(mode==='percent' && valRaw>100){ const h=$('#st_hint'); if(h){h.textContent='Percent cannot exceed 100'; h.style.color='#b42318';} return; }
+  const obj={id, purpose:purpose, customPurpose:'', mode:mode, value:valRaw};
+  const i=state.savingTargets.findIndex(x=>x.id===id);if(i>=0) state.savingTargets[i]=obj; else state.savingTargets.push(obj);save(state);renderSettingsSavingTargets();renderDashboard();$('#settingsSavingFormWrap').style.display='none'
+}
+
+function showDialog(opts,cb){const wrap=$('#askWrap');const okBtn=$('#askOk');const cancelBtn=$('#askCancel');const back=$('#askOverlay');$('#askText').textContent=opts.title||'Are you sure?';$('#askHint').textContent=opts.hint||'';okBtn.textContent=opts.okLabel||'Delete';wrap.classList.add('show');document.body.style.overflow='hidden';function cleanup(){wrap.classList.remove('show');document.body.style.overflow='';okBtn.removeEventListener('click',onOk);cancelBtn.removeEventListener('click',onCancel);back.removeEventListener('click',onCancel);document.removeEventListener('keydown',onKey)}function onOk(){cleanup();cb()}function onCancel(){cleanup()}function onKey(e){if(e.key==='Escape') onCancel()}okBtn.addEventListener('click',onOk);cancelBtn.addEventListener('click',onCancel);back.addEventListener('click',onCancel);document.addEventListener('keydown',onKey)}
+
+$('#wipeBtn').addEventListener('click',()=>{showDialog({title:'Clear all data?',hint:'Removes sample and your local data for this app',okLabel:'Clear'},()=>{localStorage.removeItem(KEY);state=structuredClone(defaults);save(state);location.reload()})});
+$('#expTime').addEventListener('click',()=>{const rows=[['date','employer','project','hours','rate','currency','amount']].concat(state.timeEntries.map(t=>[t.date,t.employerName||'',t.project||'',t.hours,t.rate,t.currency,t.hours*t.rate]));downloadCSV('timesheet.csv',rows)});$('#expBudget').addEventListener('click',()=>{const rows=[['date','type','category','amount','currency','note']].concat(state.budgetEntries.map(b=>[b.date,b.type,b.category,b.amount,b.currency,b.note||'']));downloadCSV('budget.csv',rows)});$('#expAll').addEventListener('click',()=>{let out=`# Time\n`;out+=state.timeEntries.map(t=>`${t.date},${t.hours},${t.rate},${t.currency},${t.project}`).join('\n');out+=`\n\n# Budget\n`+state.budgetEntries.map(b=>`${b.date},${b.type},${b.category},${b.amount},${b.note||''}`).join('\n');const blob=new Blob([out],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='backup.txt';a.click()});
+function downloadCSV(name,rows){const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click()}
+
+renderAll();
+try{bindEmployerUI();bindSettingsRecurringUI();bindSettingsSavingUI();populateEmployerSelects();}catch(e){}
+})();
+</script>
+</body>
+</html>
